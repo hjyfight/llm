@@ -344,7 +344,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "openai_configured": bool(settings.openai_api_key)
+        "siliconflow_configured": bool(settings.siliconflow_api_key)
     }
 
 

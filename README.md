@@ -39,7 +39,7 @@
 **后端**
 - Python 3.10+
 - FastAPI (Web框架)
-- OpenAI GPT-4 (主要LLM)
+- SiliconFlow API (主要LLM，使用 Qwen 模型)
 - LangChain (LLM应用框架)
 - ChromaDB (向量数据库，RAG支持)
 - SQLite (数据存储)
@@ -68,7 +68,7 @@
 
 - Node.js 16+
 - Python 3.10+
-- OpenAI API Key
+- SiliconFlow API Key
 
 ### 后端设置
 
@@ -80,7 +80,7 @@ pip install -r requirements.txt
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，添加你的 OPENAI_API_KEY
+# 编辑 .env 文件，添加你的 SILICONFLOW_API_KEY
 
 # 运行后端
 python main.py
@@ -115,11 +115,11 @@ npm start
      │       │
      │       └──────────┐
      │                  │
-┌────▼─────────┐  ┌────▼──────────┐
-│ OpenAI API   │  │  数据存储     │
-│ - GPT-4      │  │  - SQLite     │
-│ - Embedding  │  │  - ChromaDB   │
-└──────────────┘  └───────────────┘
+┌────▼─────────────┐  ┌────▼──────────┐
+│ SiliconFlow API  │  │  数据存储     │
+│ - Qwen Models    │  │  - SQLite     │
+│                  │  │  - ChromaDB   │
+└──────────────────┘  └───────────────┘
 ```
 
 ## 技术难点与解决方案
@@ -165,7 +165,7 @@ npm start
    - 群体情感分析（社交媒体监测）
 
 2. **技术优化**
-   - 支持更多大模型（Claude, 文心一言等）
+   - 支持更多大模型和 API 提供商
    - 模型微调提高领域准确性
    - 联邦学习保护用户隐私
 

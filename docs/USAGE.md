@@ -6,7 +6,7 @@
 
 - **Node.js**: 16.x 或更高版本
 - **Python**: 3.10 或更高版本
-- **OpenAI API Key**: 需要有效的OpenAI API密钥
+- **SiliconFlow API Key**: 需要有效的 SiliconFlow API 密钥
 
 ### 安装步骤
 
@@ -37,14 +37,15 @@ pip install -r requirements.txt
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，添加你的 OPENAI_API_KEY
+# 编辑 .env 文件，添加你的 SILICONFLOW_API_KEY
 ```
 
 **.env 文件配置示例：**
 
 ```env
-OPENAI_API_KEY=sk-your-api-key-here
-OPENAI_MODEL=gpt-4
+SILICONFLOW_API_KEY=your-siliconflow-api-key-here
+SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+SILICONFLOW_MODEL=Qwen/Qwen2.5-7B-Instruct
 HOST=0.0.0.0
 PORT=8000
 DATABASE_URL=sqlite:///./sentiment_analysis.db
@@ -227,7 +228,7 @@ GET /api/health
 {
   "status": "healthy",
   "timestamp": "2024-01-01T12:00:00",
-  "openai_configured": true
+  "siliconflow_configured": true
 }
 ```
 
@@ -415,13 +416,13 @@ pip install -r requirements.txt
 2. 前端的API_BASE_URL是否正确（在App.js中）
 3. 后端CORS配置是否正确（main.py中）
 
-### Q3: OpenAI API 调用失败
+### Q3: SiliconFlow API 调用失败
 
 **A:** 检查：
-1. .env文件中的OPENAI_API_KEY是否正确
+1. .env文件中的SILICONFLOW_API_KEY是否正确
 2. API Key是否有足够的配额
-3. 网络是否可以访问OpenAI API
-4. 尝试使用 gpt-3.5-turbo 替代 gpt-4（更便宜，但效果稍差）
+3. 网络是否可以访问 SiliconFlow API
+4. 确认 SILICONFLOW_BASE_URL 是否正确配置
 
 ### Q4: 情感分析结果不准确
 
@@ -454,23 +455,22 @@ pip install -r requirements.txt
 ### Q7: 成本如何控制？
 
 **A:** 
-1. 使用 gpt-3.5-turbo 而非 gpt-4
+1. 选择合适的模型规格
 2. 实现缓存机制避免重复分析
 3. 设置API调用频率限制
-4. 监控OpenAI账户使用情况
+4. 监控 SiliconFlow 账户使用情况
 
-参考成本（2024年1月）：
-- GPT-4: ~$0.03 per 1K tokens
-- GPT-3.5-turbo: ~$0.002 per 1K tokens
+参考成本：
 - 平均每次分析约 500-1000 tokens
+- 具体价格请参考 SiliconFlow 官网定价
 
 ### Q8: 可以离线使用吗？
 
 **A:** 
-目前依赖OpenAI API，需要网络连接。
+目前依赖 SiliconFlow API，需要网络连接。
 
 未来计划：
-- 支持本地模型（如LLaMA、ChatGLM）
+- 支持本地模型
 - 私有化部署方案
 - 离线模式（功能受限）
 
@@ -478,7 +478,7 @@ pip install -r requirements.txt
 
 **A:** 
 1. 所有数据本地存储在SQLite数据库
-2. 仅在分析时发送文本到OpenAI（不包含用户身份信息）
+2. 仅在分析时发送文本到 SiliconFlow API（不包含用户身份信息）
 3. 可以选择自行部署私有模型
 4. 定期备份和清理敏感数据
 
