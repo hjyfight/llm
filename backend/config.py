@@ -5,9 +5,10 @@ from typing import Optional
 class Settings(BaseSettings):
     """应用配置"""
     
-    # OpenAI配置
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4"
+    # SiliconFlow配置
+    siliconflow_api_key: str = ""
+    siliconflow_base_url: str = "https://api.siliconflow.cn/v1"
+    siliconflow_model: str = "Qwen/Qwen2.5-7B-Instruct"
     
     # 服务器配置
     host: str = "0.0.0.0"

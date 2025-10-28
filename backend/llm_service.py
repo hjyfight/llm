@@ -11,8 +11,11 @@ class LLMService:
     """大语言模型服务"""
     
     def __init__(self):
-        self.client = openai.OpenAI(api_key=settings.openai_api_key)
-        self.model = settings.openai_model
+        self.client = openai.OpenAI(
+            api_key=settings.siliconflow_api_key,
+            base_url=settings.siliconflow_base_url
+        )
+        self.model = settings.siliconflow_model
         
     def analyze_sentiment(self, text: str) -> Dict:
         """

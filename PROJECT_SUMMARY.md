@@ -6,7 +6,7 @@
 
 ## 项目概述
 
-这是一个基于大语言模型（GPT-4）的情感分析应用，实现了从情感识别、追踪、分析到个性化干预的完整闭环。项目旨在降低心理健康服务的门槛，为用户提供及时的情感支持和专业建议。
+这是一个基于大语言模型（使用 SiliconFlow API 和 Qwen 模型）的情感分析应用，实现了从情感识别、追踪、分析到个性化干预的完整闭环。项目旨在降低心理健康服务的门槛，为用户提供及时的情感支持和专业建议。
 
 ## 核心功能
 
@@ -54,7 +54,7 @@
 **后端**
 - Python 3.10+ 
 - FastAPI - Web框架
-- OpenAI GPT-4 - 核心LLM
+- SiliconFlow API + Qwen Models - 核心LLM
 - LangChain - LLM应用框架
 - ChromaDB - 向量数据库（RAG）
 - SQLite - 关系数据库
@@ -76,11 +76,11 @@
 │  └──┬────────────┴───────┬──────────────────┘       │
 └─────┼────────────────────┼────────────────────────┘
       │                    │
-┌─────▼──────┐      ┌─────▼──────┐
-│ OpenAI API │      │ 数据存储    │
-│  - GPT-4   │      │ - SQLite   │
-│  - Embed   │      │ - ChromaDB │
-└────────────┘      └────────────┘
+┌─────▼────────────┐ ┌─────▼──────┐
+│ SiliconFlow API  │ │ 数据存储    │
+│  - Qwen Models   │ │ - SQLite   │
+│                  │ │ - ChromaDB │
+└──────────────────┘ └────────────┘
 ```
 
 ## 创新亮点
@@ -198,7 +198,7 @@ sentiment-analysis-llm-app/
 ### 前提条件
 - Node.js 16+
 - Python 3.10+
-- OpenAI API Key
+- SiliconFlow API Key
 
 ### 安装步骤
 
@@ -206,7 +206,7 @@ sentiment-analysis-llm-app/
 # 1. 配置API Key
 cd backend
 cp .env.example .env
-# 编辑 .env，添加 OPENAI_API_KEY
+# 编辑 .env，添加 SILICONFLOW_API_KEY
 
 # 2. 安装后端依赖
 python -m venv venv
@@ -332,7 +332,7 @@ python demo.py
 - [ ] 多模态支持（图像、语音情感识别）
 - [ ] 社交功能（匿名社区、互助小组）
 - [ ] 智能预警和风险预测
-- [ ] 支持更多LLM（文心一言、通义千问等）
+- [ ] 支持更多LLM和API提供商
 
 ### 长期（6-12个月）
 - [ ] 模型微调优化
@@ -384,7 +384,7 @@ python demo.py
 ### 数据隐私
 - ✅ 本地数据存储
 - ✅ API调用加密
-- ⚠️ 需要网络连接OpenAI
+- ⚠️ 需要网络连接到 SiliconFlow API
 - 📌 未来计划私有化部署
 
 ## 许可证

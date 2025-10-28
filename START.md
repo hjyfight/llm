@@ -2,7 +2,7 @@
 
 ## 第一次使用
 
-### 1. 配置 OpenAI API Key
+### 1. 配置 SiliconFlow API Key
 
 ```bash
 cd backend
@@ -11,7 +11,7 @@ cp .env.example .env
 
 编辑 `.env` 文件，添加你的 API Key：
 ```
-OPENAI_API_KEY=sk-your-actual-api-key-here
+SILICONFLOW_API_KEY=your-siliconflow-api-key-here
 ```
 
 ### 2. 安装后端依赖
@@ -74,7 +74,7 @@ python demo.py
 
 **Q: 显示 "分析失败，请检查后端服务"**
 - 检查后端是否启动
-- 检查 .env 中的 OPENAI_API_KEY 是否正确
+- 检查 .env 中的 SILICONFLOW_API_KEY 是否正确
 - 查看后端终端的错误信息
 
 **Q: npm install 很慢**
