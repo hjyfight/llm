@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { 
   Chart as ChartJS, 
@@ -12,8 +12,8 @@ import {
   Legend,
   ArcElement
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { Heart, TrendingUp, BarChart3, Activity, AlertCircle, CheckCircle } from 'lucide-react';
+import { Line, Doughnut } from 'react-chartjs-2';
+import { Heart, Activity, AlertCircle, CheckCircle } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -31,7 +31,7 @@ const API_BASE_URL = 'http://localhost:8000';
 
 function App() {
   const [text, setText] = useState('');
-  const [userId, setUserId] = useState('default_user');
+  const [userId] = useState('default_user');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
@@ -39,6 +39,33 @@ function App() {
   const [assessment, setAssessment] = useState(null);
   const [activeTab, setActiveTab] = useState('analyze');
   const [error, setError] = useState(null);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/sentiment/history/${userId}`);
+      setHistory(response.data);
+    } catch (err) {
+      console.error('获取历史失败:', err);
+    }
+  }, [userId]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/sentiment/stats/${userId}`);
+      setStats(response.data);
+    } catch (err) {
+      console.error('获取统计失败:', err);
+    }
+  }, [userId]);
+
+  const fetchAssessment = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/health/assessment/${userId}`);
+      setAssessment(response.data);
+    } catch (err) {
+      console.error('获取评估失败:', err);
+    }
+  }, [userId]);
 
   useEffect(() => {
     if (activeTab === 'history') {
@@ -48,34 +75,7 @@ function App() {
     } else if (activeTab === 'assessment') {
       fetchAssessment();
     }
-  }, [activeTab]);
-
-  const fetchHistory = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/sentiment/history/${userId}`);
-      setHistory(response.data);
-    } catch (err) {
-      console.error('获取历史失败:', err);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/sentiment/stats/${userId}`);
-      setStats(response.data);
-    } catch (err) {
-      console.error('获取统计失败:', err);
-    }
-  };
-
-  const fetchAssessment = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/health/assessment/${userId}`);
-      setAssessment(response.data);
-    } catch (err) {
-      console.error('获取评估失败:', err);
-    }
-  };
+  }, [activeTab, fetchHistory, fetchStats, fetchAssessment]);
 
   const handleAnalyze = async () => {
     if (!text.trim()) {
