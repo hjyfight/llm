@@ -24,6 +24,10 @@ class EmotionData:
     def __post_init__(self):
         if not 0 <= self.intensity <= 1:
             raise ValueError("情感强度必须在0-1之间")
+    
+    def get_intensity_percentage(self) -> int:
+        """获取强度百分比"""
+        return round(self.intensity * 100)
 
 
 @dataclass
@@ -58,6 +62,30 @@ class User:
     created_at: datetime
     last_active: datetime
     profile: Dict[str, Any] = None
+
+
+@dataclass
+class UserStatistics:
+    """用户统计数据传输对象"""
+    total_records: int = 0
+    positive_count: int = 0
+    negative_count: int = 0
+    neutral_count: int = 0
+    average_intensity: float = 0.0
+    most_common_emotions: List[Any] = None
+    daily_trends: List[Any] = None
+    
+    def get_sentiment_distribution(self) -> Dict[str, float]:
+        """获取情感分布百分比"""
+        total = self.total_records
+        if total == 0:
+            return {"positive": 0.0, "negative": 0.0, "neutral": 0.0}
+        
+        return {
+            "positive": (self.positive_count / total) * 100,
+            "negative": (self.negative_count / total) * 100,
+            "neutral": (self.neutral_count / total) * 100
+        }
 
 
 # ================================
@@ -141,6 +169,26 @@ class IUserManager(ABC):
     @abstractmethod
     def update_user_activity(self, user_id: str) -> None:
         """更新用户活动时间"""
+        pass
+
+
+# 前端UI组件接口（在后端保留定义以保持兼容性）
+class IUIComponent(ABC):
+    """UI组件接口"""
+    
+    @abstractmethod
+    def render(self):
+        """渲染组件"""
+        pass
+    
+    @abstractmethod
+    def update(self, data):
+        """更新组件数据"""
+        pass
+    
+    @abstractmethod
+    def destroy(self):
+        """销毁组件"""
         pass
 
 
