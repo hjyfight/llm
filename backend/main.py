@@ -18,11 +18,14 @@ from schemas import (
 from llm_service import llm_service
 from rag_service import rag_service
 
+# 导入新的面向对象服务
+from core.service_factory import get_sentiment_service, get_service_manager
+
 # 创建FastAPI应用
 app = FastAPI(
     title="智能情感分析与心理健康辅助系统",
-    description="基于大语言模型的多维度情感分析平台",
-    version="1.0.0"
+    description="基于大语言模型的多维度情感分析平台 - 面向对象设计架构",
+    version="2.0.0"
 )
 
 # CORS配置
@@ -40,9 +43,25 @@ async def root():
     """根路径"""
     return {
         "message": "智能情感分析与心理健康辅助系统 API",
-        "version": "1.0.0",
+        "version": "2.0.0",
+        "architecture": "面向对象设计架构",
         "docs": "/docs"
     }
+
+
+@app.get("/api/health")
+async def health_check():
+    """健康检查 - 使用新的面向对象架构"""
+    try:
+        service_manager = get_service_manager()
+        health_status = service_manager.health_check()
+        return health_status
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 
 @app.post("/api/sentiment/analyze", response_model=SentimentAnalysisResponse)
@@ -51,7 +70,7 @@ async def analyze_sentiment(
     db: Session = Depends(get_db)
 ):
     """
-    情感分析接口
+    情感分析接口 - 使用新的面向对象架构
     
     对用户输入的文本进行多维度情感分析，包括：
     - 基础情感分类（积极/消极/中性）
@@ -62,79 +81,32 @@ async def analyze_sentiment(
     """
     
     try:
-        # Step 1: 使用LLM进行情感分析
-        sentiment_result = llm_service.analyze_sentiment(request.text)
+        # 使用新的面向对象服务
+        sentiment_service = get_sentiment_service()
+        result = sentiment_service.analyze_text(request.text, request.user_id)
         
-        # Step 2: 获取用户历史记录（用于个性化建议）
-        user_history = db.query(SentimentRecord).filter(
-            SentimentRecord.user_id == request.user_id
-        ).order_by(SentimentRecord.created_at.desc()).limit(10).all()
-        
-        user_history_dicts = [record.to_dict() for record in user_history]
-        
-        # Step 3: 使用RAG检索相关知识
-        main_emotions = [e['name'] for e in sentiment_result.get('emotions', [])]
-        knowledge = rag_service.retrieve_relevant_knowledge(
-            query=sentiment_result.get('analysis', ''),
-            emotion_categories=None,
-            top_k=3
+        # 转换为响应格式
+        response = SentimentAnalysisResponse(
+            id=result.id,
+            user_id=result.userId,
+            text=result.text,
+            sentiment=result.sentiment,
+            confidence=result.confidence,
+            emotions=[
+                EmotionDetail(name=e.name, intensity=e.intensity) 
+                for e in result.emotions
+            ],
+            intensity=result.intensity,
+            analysis=result.analysis,
+            causes=result.causes,
+            suggestions=result.suggestions,
+            created_at=result.timestamp
         )
         
-        # Step 4: 生成个性化建议（结合历史和知识库）
-        suggestions = llm_service.generate_suggestions(
-            sentiment_result, 
-            user_history_dicts
-        )
-        
-        # 如果有相关知识，添加到建议中
-        if knowledge:
-            knowledge_text = "\n\n📚 相关专业建议：\n" + "\n".join([
-                f"• {k['content']}" for k in knowledge
-            ])
-            suggestions += knowledge_text
-        
-        # Step 5: 保存到数据库
-        emotions_json = json.dumps(sentiment_result.get('emotions', []), ensure_ascii=False)
-        
-        record = SentimentRecord(
-            user_id=request.user_id,
-            text=request.text,
-            sentiment=sentiment_result.get('sentiment', 'neutral'),
-            confidence=sentiment_result.get('confidence', 0.5),
-            emotions=emotions_json,
-            intensity=sentiment_result.get('intensity', 0.5),
-            analysis=sentiment_result.get('analysis', ''),
-            causes=sentiment_result.get('causes', ''),
-            suggestions=suggestions
-        )
-        
-        db.add(record)
-        db.commit()
-        db.refresh(record)
-        
-        # Step 6: 构建响应
-        emotions_list = [
-            EmotionDetail(name=e['name'], intensity=e['intensity'])
-            for e in sentiment_result.get('emotions', [])
-        ]
-        
-        return SentimentAnalysisResponse(
-            id=record.id,
-            user_id=record.user_id,
-            text=record.text,
-            sentiment=record.sentiment,
-            confidence=record.confidence,
-            emotions=emotions_list,
-            intensity=record.intensity,
-            analysis=record.analysis,
-            causes=record.causes,
-            suggestions=record.suggestions,
-            created_at=record.created_at
-        )
+        return response
         
     except Exception as e:
-        print(f"分析错误: {e}")
-        raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"情感分析失败: {str(e)}")
 
 
 @app.get("/api/sentiment/history/{user_id}")
@@ -143,14 +115,30 @@ async def get_history(
     limit: int = 50,
     db: Session = Depends(get_db)
 ):
-    """获取用户的情感分析历史"""
+    """获取用户的情感分析历史 - 使用新的面向对象架构"""
     
     try:
-        records = db.query(SentimentRecord).filter(
-            SentimentRecord.user_id == user_id
-        ).order_by(SentimentRecord.created_at.desc()).limit(limit).all()
+        # 使用新的面向对象服务
+        sentiment_service = get_sentiment_service()
+        history = sentiment_service.data_manager.get_user_history(user_id, limit)
         
-        return [record.to_dict() for record in records]
+        # 转换为字典格式
+        return [
+            {
+                "id": result.id,
+                "user_id": result.userId,
+                "text": result.text,
+                "sentiment": result.sentiment,
+                "confidence": result.confidence,
+                "emotions": [{"name": e.name, "intensity": e.intensity} for e in result.emotions],
+                "intensity": result.intensity,
+                "analysis": result.analysis,
+                "causes": result.causes,
+                "suggestions": result.suggestions,
+                "created_at": result.timestamp
+            }
+            for result in history
+        ]
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取历史失败: {str(e)}")
@@ -162,127 +150,36 @@ async def get_stats(
     days: int = 30,
     db: Session = Depends(get_db)
 ):
-    """获取用户的情感统计"""
+    """获取用户的情感统计 - 使用新的面向对象架构"""
     
     try:
-        # 获取指定时间范围内的记录
-        start_date = datetime.utcnow() - timedelta(days=days)
-        records = db.query(SentimentRecord).filter(
-            SentimentRecord.user_id == user_id,
-            SentimentRecord.created_at >= start_date
-        ).order_by(SentimentRecord.created_at).all()
+        # 使用新的面向对象服务
+        sentiment_service = get_sentiment_service()
+        stats = sentiment_service.data_manager.get_statistics(user_id, days)
         
-        if not records:
-            return SentimentStats(
-                total_records=0,
-                positive_count=0,
-                negative_count=0,
-                neutral_count=0,
-                average_intensity=0,
-                most_common_emotions=[],
-                trends=[]
-            )
-        
-        # 统计基础数据
-        positive_count = sum(1 for r in records if r.sentiment == 'positive')
-        negative_count = sum(1 for r in records if r.sentiment == 'negative')
-        neutral_count = sum(1 for r in records if r.sentiment == 'neutral')
-        
-        # 计算平均强度
-        avg_intensity = sum(r.intensity or 0 for r in records) / len(records)
-        
-        # 统计最常见的情绪
-        emotion_counts = {}
-        for record in records:
-            try:
-                emotions = json.loads(record.emotions) if isinstance(record.emotions, str) else record.emotions
-                for emotion in emotions:
-                    name = emotion.get('name', 'unknown')
-                    intensity = emotion.get('intensity', 0)
-                    if name in emotion_counts:
-                        emotion_counts[name]['count'] += 1
-                        emotion_counts[name]['total_intensity'] += intensity
-                    else:
-                        emotion_counts[name] = {'count': 1, 'total_intensity': intensity}
-            except:
-                pass
-        
-        most_common = sorted(
-            emotion_counts.items(), 
-            key=lambda x: x[1]['count'], 
-            reverse=True
-        )[:5]
-        
-        most_common_emotions = [
-            EmotionDetail(
-                name=name,
-                intensity=data['total_intensity'] / data['count']
-            )
-            for name, data in most_common
-        ]
-        
-        # 计算趋势（按天分组）
-        trends_dict = {}
-        for record in records:
-            date_key = record.created_at.strftime('%Y-%m-%d')
-            if date_key not in trends_dict:
-                trends_dict[date_key] = {
-                    'sentiments': [],
-                    'emotions': {}
-                }
-            
-            # 情感得分：positive=1, neutral=0, negative=-1
-            sentiment_score = {
-                'positive': 1,
-                'neutral': 0,
-                'negative': -1
-            }.get(record.sentiment, 0)
-            
-            trends_dict[date_key]['sentiments'].append(sentiment_score)
-            
-            # 统计情绪
-            try:
-                emotions = json.loads(record.emotions) if isinstance(record.emotions, str) else record.emotions
-                for emotion in emotions:
-                    name = emotion.get('name', 'unknown')
-                    intensity = emotion.get('intensity', 0)
-                    if name in trends_dict[date_key]['emotions']:
-                        trends_dict[date_key]['emotions'][name].append(intensity)
-                    else:
-                        trends_dict[date_key]['emotions'][name] = [intensity]
-            except:
-                pass
-        
-        # 构建趋势列表
-        trends = []
-        for date_key in sorted(trends_dict.keys()):
-            data = trends_dict[date_key]
-            avg_sentiment = sum(data['sentiments']) / len(data['sentiments'])
-            
-            emotion_dist = {
-                name: sum(intensities) / len(intensities)
-                for name, intensities in data['emotions'].items()
-            }
-            
-            trends.append(SentimentTrend(
-                date=date_key,
-                sentiment_score=avg_sentiment,
-                emotion_distribution=emotion_dist
-            ))
-        
+        # 转换为响应格式
         return SentimentStats(
-            total_records=len(records),
-            positive_count=positive_count,
-            negative_count=negative_count,
-            neutral_count=neutral_count,
-            average_intensity=avg_intensity,
-            most_common_emotions=most_common_emotions,
-            trends=trends
+            total_records=stats.get("total_records", 0),
+            positive_count=stats.get("positive_count", 0),
+            negative_count=stats.get("negative_count", 0),
+            neutral_count=stats.get("neutral_count", 0),
+            average_intensity=stats.get("average_intensity", 0.0),
+            most_common_emotions=[
+                EmotionDetail(name=e["name"], intensity=e.get("average_intensity", 0.0))
+                for e in stats.get("most_common_emotions", [])
+            ],
+            trends=[
+                SentimentTrend(
+                    date=trend["date"],
+                    sentiment_score=trend.get("sentiment_score", 0.0),
+                    emotion_distribution={}
+                )
+                for trend in stats.get("daily_trends", [])
+            ]
         )
         
     except Exception as e:
-        print(f"统计错误: {e}")
-        raise HTTPException(status_code=500, detail=f"统计失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取统计失败: {str(e)}")
 
 
 @app.get("/api/health/assessment/{user_id}", response_model=HealthAssessment)
@@ -291,79 +188,63 @@ async def assess_health(
     days: int = 30,
     db: Session = Depends(get_db)
 ):
-    """心理健康评估"""
+    """获取用户心理健康评估 - 使用新的面向对象架构"""
     
     try:
-        # 获取指定时间范围内的记录
-        start_date = datetime.utcnow() - timedelta(days=days)
-        records = db.query(SentimentRecord).filter(
-            SentimentRecord.user_id == user_id,
-            SentimentRecord.created_at >= start_date
-        ).order_by(SentimentRecord.created_at.desc()).all()
+        # 使用新的面向对象服务
+        sentiment_service = get_sentiment_service()
+        health_score = sentiment_service.health_assessor.assess_health(user_id, days)
         
-        # 转换为字典列表
-        records_dicts = [record.to_dict() for record in records]
-        
-        # 使用LLM进行评估
-        assessment = llm_service.assess_mental_health(records_dicts)
-        
+        # 转换为响应格式
         return HealthAssessment(
-            overall_score=assessment.get('overall_score', 70),
-            risk_level=assessment.get('risk_level', 'low'),
-            key_concerns=assessment.get('key_concerns', []),
-            recommendations=assessment.get('recommendations', []),
-            detailed_analysis=assessment.get('detailed_analysis', '')
+            overall_score=health_score.overallScore,
+            risk_level=health_score.riskLevel,
+            key_concerns=health_score.keyConcerns,
+            recommendations=health_score.recommendations,
+            detailed_analysis=health_score.detailedAnalysis
         )
         
     except Exception as e:
-        print(f"评估错误: {e}")
-        raise HTTPException(status_code=500, detail=f"评估失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"健康评估失败: {str(e)}")
 
 
 @app.get("/api/knowledge/search")
-async def search_knowledge(emotion: str = None, query: str = None):
-    """搜索心理健康知识库"""
+async def search_knowledge(
+    query: str = None,
+    emotion: str = None,
+    limit: int = 5
+):
+    """搜索心理健康知识库 - 使用新的面向对象架构"""
     
     try:
-        if emotion:
-            results = rag_service.search_by_emotion(emotion, top_k=5)
-        elif query:
-            results = rag_service.retrieve_relevant_knowledge(query, top_k=5)
-        else:
-            return {"error": "请提供emotion或query参数"}
+        # 使用新的面向对象服务
+        sentiment_service = get_sentiment_service()
+        knowledge = sentiment_service.knowledge_retriever.search_knowledge(
+            query or "", emotion, limit
+        )
         
-        return {"results": results}
+        return {"results": knowledge}
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"搜索失败: {str(e)}")
-
-
-@app.get("/api/health")
-async def health_check():
-    """健康检查接口"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "siliconflow_configured": bool(settings.siliconflow_api_key)
-    }
+        raise HTTPException(status_code=500, detail=f"知识搜索失败: {str(e)}")
 
 
 if __name__ == "__main__":
     import uvicorn
     
     print(f"""
-    ╔══════════════════════════════════════════════════════════╗
+    ╔════════════════════════════════════════════════════════╗
     ║  智能情感分析与心理健康辅助系统                          ║
     ║  Intelligent Sentiment Analysis & Mental Health System   ║
-    ╠══════════════════════════════════════════════════════════╣
-    ║  服务地址: http://{settings.host}:{settings.port}                    ║
-    ║  API文档: http://{settings.host}:{settings.port}/docs                ║
-    ╚══════════════════════════════════════════════════════════╝
+    ║                                                       ║
+    ║  面向对象架构版本 v2.0.0                              ║
+    ║  Object-Oriented Architecture                         ║
+    ╚════════════════════════════════════════════════════════╝
+    
+    🚀 启动服务器...
+    📍 API地址: http://localhost:8000
+    📖 文档地址: http://localhost:8000/docs
+    🔧 架构: 面向对象设计
     """)
     
-    uvicorn.run(
-        "main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=True
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
